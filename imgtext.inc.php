@@ -5,8 +5,20 @@
 // Twitter: @m0370
 // サムネイル用に、ページタイトルを取り込んだ画像を出力してくれるPukiwikiプラグイン
 
-// ver0.9 (2024.3.31) プロトタイプ
-// 自分自身のサイト用に作成した段階なのでフォルダやパラメータなどの微調整は未実施です。
+// ver1.0 (2024.3.31)
+
+// 設定項目
+define('IMGTEXT_DIR', 'img/'); // 画像保存ディレクトリ
+// if (!defined('IMAGE_DIR')) define('IMAGE_DIR', 'img/'); 
+
+define('TEMPLATE_IMG', './skin/thumbnail.png'); // テンプレート画像ファイル（Twitterブログカード用の推奨画像サイズ：2048x1072）
+define('FONTPATH', './skin/fonts/ipagp.ttf'); // TTFフォントのファイル
+define('FONTSIZE', 80); // フォントサイズ（推奨値：80）
+define('LEFT', 160); // 左からのテキスト開始位置（推奨値：160）
+define('TOP', 240); // 上からのテキスト開始位置（推奨値：240）
+define('LINE', 150); // 行の高さ（推奨値：150）
+define('SUB_FONTSIZE', 48); // 日時表示のフォントサイズ（推奨値：48）
+
 
 function plugin_imgtext_convert()
 {
@@ -15,9 +27,9 @@ function plugin_imgtext_convert()
 
 	exist_plugin('s');
 	$page_id = plugin_s_get_page_id($page);
-	$gifcache = 'img/' . $page_id . '.gif';
-	$jpgcache = 'img/' . $page_id . '.jpg';
-	$pngcache = 'img/' . $page_id . '.png';
+	$gifcache = IMGTEXT_DIR . $page_id . '.gif';
+	$jpgcache = IMGTEXT_DIR . $page_id . '.jpg';
+	$pngcache = IMGTEXT_DIR . $page_id . '.png';
 	if(file_exists($jpgcache)) { $imgcache = $jpgcache ; }
 	else if(file_exists($gifcache)) { $imgcache = $gifcache ; }
 	else { $imgcache = $pngcache ; }
@@ -27,27 +39,24 @@ function plugin_imgtext_convert()
 		$leafname = plugin_topicpath_leafname_inline($page);
 	
 		// 画像を生成
-		$img = imagecreatefrompng('./skin/oncologynote_thumbnail.png');
-		$text_full = $leafname;
+		$img = imagecreatefrompng(TEMPLATE_IMG);
 		$text_date = substr(format_date(get_filetime($page)), 0, 10);
-		$text_array = mb_str_split($text_full, 16);
+		$text_array = mb_str_split($leafname, 16);
 		
 		// パラメータ設定
-		$fontsize = 80;
 		$text_color = imagecolorallocate($img, 127, 127, 127); 
-		$font = './skin/fonts/hiraginoW6.ttf';
-		$y = 240;
+		$y = TOP;
 		
 		foreach ($text_array as $text) {
 		  // 生成した画像に文字を貼り付ける
 		  // 引数：(画像, フォントサイズ, 文字の角度, x座標, y座標,  文字色, フォント, 貼り付ける文字)
-		  imagettftext($img, $fontsize, 0, 160, $y, $text_color, $font, $text);
+		  imagettftext($img, FONTSIZE, 0, LEFT, $y, $text_color, FONTPATH, $text);
 		  // 指定した高さ分y座標を下げることで、改行をする
-		  $y = $y + 150;
+		  $y = $y + LINE;
 		  if ($y >= 600) {break;} 
 		}
 		
-		imagettftext($img, 48, 0, 160, $y, $text_color, $font, $text_date);
+		imagettftext($img, SUB_FONTSIZE, 0, LEFT, $y, $text_color, FONTPATH, $text_date);
 		
 		// 出力
 		$imgfilename = $page_id . '.png';
